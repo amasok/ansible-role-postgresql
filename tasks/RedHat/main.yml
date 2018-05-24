@@ -1,0 +1,43 @@
+
+---
+# tasks file for ansible-role-vim
+
+- name: Install postgresql packages
+  become: yes
+  yum: name={{ item }}
+  with_items:
+    - https://yum.postgresql.org/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm
+
+- name: Install postgresql packages
+  become: yes
+  yum: name={{ item }} state=installed
+  with_items:
+    - postgresql96-server
+    - postgresql96-contrib
+    - postgresql96-devel
+    - python-psycopg2
+
+- stat: path=/var/lib/pgsql/9.6/data/PG_VERSION
+  register: dbcluster
+
+- name: Initializing database
+  command: /usr/pgsql-9.6/bin/postgresql96-setup initdb
+  when: not dbcluster.stat.exists
+
+
+- name: add postgresql configure
+  lineinfile:
+    dest=/var/lib/pgsql/9.6/data/postgresql.conf
+    line="listen_addresses = '*'"
+    insertbefore=BOF state=present
+
+- name: set pg_hba configure
+  template: src=pg_hba.conf dest=/var/lib/pgsql/9.6/data/pg_hba.conf owner=postgres group=postgres mode="u=rw,g=r,o=r"
+
+- name: restart postgresql-9.6.service
+  systemd:
+    name: postgresql-9.6.service
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+  become: yes

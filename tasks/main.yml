@@ -1,0 +1,8 @@
+---
+# tasks file for ansible-role-postgresql
+# - name: Add the OS specific varibles
+#   include_vars: "{{ ansible_os_family }}.yml"
+
+# (setup)  specific tasks
+- include: "RedHat/main.yml"
+  when: ansible_os_family == 'RedHat'
